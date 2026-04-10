@@ -1,0 +1,22 @@
+{
+  "name": "fueleu-maritime-compliance-platform",
+  "private": true,
+  "description": "Monorepo: backend (Express API) + frontend (Vite React). Docs at repository root.",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w fueleu-backend",
+    "start": "npm run start -w fueleu-backend",
+    "test": "npm run test -w fueleu-backend && npm run test -w fueleu-web",
+    "test:integration": "npm run test:integration -w fueleu-backend",
+    "lint": "npm run lint -w fueleu-backend && npm run lint -w fueleu-web",
+    "build": "npm run build -w fueleu-backend && npm run build -w fueleu-web",
+    "db:generate": "npm run db:generate -w fueleu-backend",
+    "db:migrate": "npm run db:migrate -w fueleu-backend",
+    "db:push": "npm run db:push -w fueleu-backend",
+    "db:seed": "npm run db:seed -w fueleu-backend",
+    "db:studio": "npm run db:studio -w fueleu-backend"
+  }
+}

@@ -1,0 +1,75 @@
+// FuelEU Maritime Compliance — PostgreSQL via Prisma
+// Connection string: DATABASE_URL (see .env.example)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Seed routes R001–R005; exactly one row may be marked baseline for comparisons.
+model Route {
+  id                        String  @id @map("id")
+  vesselId                  String  @map("vessel_id")
+  fuelType                  String  @map("fuel_type")
+  year                      Int     @map("year")
+  fuelConsumptionT          Decimal @map("fuel_consumption_t") @db.Decimal(18, 6)
+  actualIntensityGco2ePerMj Decimal @map("actual_intensity_gco2e_per_mj") @db.Decimal(18, 6)
+  isBaseline                Boolean @default(false) @map("is_baseline")
+
+  @@map("routes")
+}
+
+/// Per-ship, per-year compliance outcome (verified values).
+model ShipCompliance {
+  shipId                       String  @map("ship_id")
+  year                         Int     @map("year")
+  complianceBalanceGco2e       Decimal @map("compliance_balance_gco2e") @db.Decimal(20, 6)
+  verifiedPositiveForBanking   Boolean @default(false) @map("verified_positive_for_banking")
+  consecutiveNonCompliantYears Int     @default(0) @map("consecutive_non_compliant_years")
+  voyagesInScope               Int     @default(0) @map("voyages_in_scope")
+
+  @@id([shipId, year])
+  @@map("ship_compliance")
+}
+
+/// Article 20 bank / apply ledger lines.
+model BankEntry {
+  id          String        @id @default(cuid()) @map("id")
+  shipId      String        @map("ship_id")
+  year        Int           @map("year")
+  amountGco2e Decimal       @map("amount_gco2e") @db.Decimal(20, 6)
+  kind        BankEntryKind @map("kind")
+
+  @@map("bank_entries")
+}
+
+enum BankEntryKind {
+  bank
+  apply
+}
+
+/// Article 21 compliance pool header.
+model Pool {
+  id            String       @id @default(cuid()) @map("id")
+  reportingYear Int          @map("reporting_year")
+  members       PoolMember[]
+
+  @@map("pools")
+}
+
+/// Ships in a pool with snapshot compliance balance (gCO₂e) at allocation time.
+model PoolMember {
+  id                       String  @id @default(cuid()) @map("id")
+  poolId                   String  @map("pool_id")
+  shipId                   String  @map("ship_id")
+  complianceBalanceGco2e   Decimal @map("compliance_balance_gco2e") @db.Decimal(20, 6)
+
+  pool Pool @relation(fields: [poolId], references: [id], onDelete: Cascade)
+
+  @@unique([poolId, shipId])
+  @@map("pool_members")
+}
